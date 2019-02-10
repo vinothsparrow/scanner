@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 	"strings"
 
@@ -31,6 +32,11 @@ func (u ScanController) GitScan(c *gin.Context) {
 				return
 			}
 		}
+		if checUrlInternal(u) {
+			c.JSON(500, gin.H{"message": "Not a valid URL"})
+			c.Abort()
+			return
+		}
 		uuidObj, _ := uuid.NewRandom()
 		id := uuidObj.String()
 		req := model.NewScanRequest(*u, id, "git")
@@ -58,4 +64,38 @@ func (u ScanController) Status(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{"Id": req.Id, "Status": req.Status, "Result": req.Result})
 	return
+}
+
+// Check if the host in internal to avoid SSRF
+func checUrlInternal(url *url.URL) bool {
+	private := false
+	scheme := url.Scheme
+	host := url.Hostname()
+	if scheme != "http" && scheme != "https" {
+		return true
+	}
+	if host == "localhost" || host == "0.0.0.0" || host == "metadata.google.internal" {
+		return true
+	}
+	IPS, _ := net.LookupIP(host)
+	for _, IP := range IPS {
+		if IP.String() == "169.254.169.254" {
+			private = true
+		}
+		if !private && IP != nil {
+			_, privateLoopBitBlock, _ := net.ParseCIDR("127.0.0.0/8")
+			_, private24BitBlock, _ := net.ParseCIDR("10.0.0.0/8")
+			_, private20BitBlock, _ := net.ParseCIDR("172.16.0.0/12")
+			_, private16BitBlock, _ := net.ParseCIDR("192.168.0.0/16")
+			_, privateIPV6LoopBlock, _ := net.ParseCIDR("::1/128")
+			_, privateIPV6LinkBlock, _ := net.ParseCIDR("fe80::/10")
+			_, privateIPV6Block, _ := net.ParseCIDR("fd00::/8")
+			private = privateLoopBitBlock.Contains(IP) || private24BitBlock.Contains(IP) || private20BitBlock.Contains(IP) || private16BitBlock.Contains(IP)
+			private = private || privateIPV6LoopBlock.Contains(IP) || privateIPV6LinkBlock.Contains(IP) || privateIPV6Block.Contains(IP)
+		}
+		if private {
+			return private
+		}
+	}
+	return private
 }

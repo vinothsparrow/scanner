@@ -1,7 +1,9 @@
 package config
 
 import (
+	"os"
 	"path/filepath"
+	"strconv"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -20,7 +22,7 @@ func Init(env string) {
 	config.AddConfigPath("config/")
 	err = config.ReadInConfig()
 	if err != nil {
-		log.Fatal("error on parsing configuration file")
+		log.Error("error on parsing configuration file")
 	}
 }
 
@@ -32,8 +34,20 @@ func relativePath(basedir string, path *string) {
 }
 
 func GetConfig() *viper.Viper {
-	config.SetDefault("port", "5678")
-	config.SetDefault("port", "5678")
-	config.SetDefault("port", "5678")
+
+	config.SetDefault("http.server", getenv("SCANNER_SERVER", "0.0.0.0"))
+	config.SetDefault("http.port", getenv("SCANNER_PORT", "8000"))
+	config.SetDefault("auth.key", getenv("SCANNER_AUTH_KEY", "0a1e703c-4ba3-4156-b011-6fc1b7db71f5"))
+	config.SetDefault("http.env", getenv("SCANNER_ENV", "release"))
+	workers, _ := strconv.Atoi(getenv("SCANNER_WORKER_COUNT", "2"))
+	config.SetDefault("worker.count", workers)
 	return config
+}
+
+func getenv(key, fallback string) string {
+	value := os.Getenv(key)
+	if len(value) == 0 {
+		return fallback
+	}
+	return value
 }

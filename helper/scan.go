@@ -1,13 +1,12 @@
 package helper
 
 import (
-	"bytes"
-	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/vinothsparrow/scanner/model"
 )
 
@@ -22,48 +21,48 @@ type title struct {
 func GitScan(req *model.ScanRequest) (*model.ScanRequest, error) {
 	result := model.NewScanResult(req.Url, req.Id, -1, "error occured")
 	req.Result = result
-	resp, err := http.Get(fmt.Sprintf("%s/.git", req.Url.String()))
+	gitUrl := req.Url.String()
+	if !strings.HasSuffix(gitUrl, "/") {
+		gitUrl = gitUrl + "/"
+	}
+	resp, err := http.Get(fmt.Sprintf("%s.git", gitUrl))
 	if err != nil {
+		log.Error(err)
 		return req, err
 	}
 	if resp.StatusCode == http.StatusOK {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
+			log.Error(err)
 			return req, err
 		}
-		h := html{}
-		err = xml.NewDecoder(bytes.NewBuffer(body)).Decode(&h)
-		if err != nil {
-			return req, err
-		}
-		if len(strings.TrimSpace(h.Head.Title)) != 0 && strings.ContainsAny(h.Head.Title, "Index of") {
+		if strings.ContainsAny(string(body), "Index of") {
 			result := model.NewScanResult(req.Url, req.Id, 1, ".git folder found")
 			req.Result = result
 			return req, err
 		}
 	}
-	resp, err = http.Get(fmt.Sprintf("%s/.git/", req.Url.String()))
+	resp, err = http.Get(fmt.Sprintf("%s.git/", gitUrl))
 	if err != nil {
+		log.Error(err)
 		return req, err
 	}
 	if resp.StatusCode == http.StatusOK {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
+			log.Error(err)
 			return req, err
 		}
-		h := html{}
-		err = xml.NewDecoder(bytes.NewBuffer(body)).Decode(&h)
-		if err != nil {
-			return req, err
-		}
-		if len(strings.TrimSpace(h.Head.Title)) != 0 && strings.ContainsAny(h.Head.Title, "Index of") {
+		if strings.ContainsAny(string(body), "Index of") {
 			result := model.NewScanResult(req.Url, req.Id, 1, ".git folder found")
 			req.Result = result
 			return req, err
 		}
 	}
-	resp, err = http.Get(fmt.Sprintf("%s/.git/HEAD", req.Url.String()))
+
+	resp, err = http.Get(fmt.Sprintf("%s.git/HEAD", gitUrl))
 	if err != nil {
+		log.Error(err)
 		return req, err
 	}
 	if resp.StatusCode == http.StatusOK {
