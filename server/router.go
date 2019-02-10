@@ -30,6 +30,7 @@ func NewRouter() *gin.Engine {
 		{
 			scan := new(controllers.ScanController)
 			scanGroup.GET("/git", scan.GitScan)
+			scanGroup.GET("/status/:id", scan.Status)
 		}
 	}
 	return router

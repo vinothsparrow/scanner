@@ -1,9 +1,15 @@
 package helper
 
 import (
+	"errors"
+	"time"
+
+	cache "github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 	"github.com/vinothsparrow/scanner/model"
 )
+
+var Cache *cache.Cache
 
 type Worker struct {
 	Id          int
@@ -23,6 +29,10 @@ func NewWorker(id int, workerQueue chan chan model.ScanRequest) Worker {
 	return worker
 }
 
+func init() {
+	Cache = cache.New(5*time.Hour, 24*time.Hour)
+}
+
 // This function "starts" the worker by starting a goroutine, that is
 // an infinite "for-select" loop.
 func (w *Worker) Start() {
@@ -34,9 +44,12 @@ func (w *Worker) Start() {
 			select {
 			case work := <-w.Work:
 				// Receive a work request.
-				log.Printf("worker%d: Received work request, delaying for %f seconds\n", w.Id, work.Id)
-
-				log.Printf("worker%d: Hello, %s!\n", w.Id, work.Id)
+				log.Printf("worker%d: Received scan request, %s!\n", w.Id, work.Id)
+				work.Status = "processing"
+				Cache.Set(work.Id, &work, cache.DefaultExpiration)
+				_, _ = GitScan(&work)
+				work.Status = "done"
+				Cache.Set(work.Id, &work, cache.DefaultExpiration)
 
 			case <-w.QuitChan:
 				// We have been asked to stop.
@@ -45,6 +58,13 @@ func (w *Worker) Start() {
 			}
 		}
 	}()
+}
+
+func GetScanRequest(id string) (*model.ScanRequest, error) {
+	if req, found := Cache.Get(id); found {
+		return req.(*model.ScanRequest), nil
+	}
+	return nil, errors.New("Scan not found")
 }
 
 // Stop tells the worker to stop listening for work requests.

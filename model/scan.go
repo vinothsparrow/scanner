@@ -28,3 +28,13 @@ type ScanResult struct {
 	ResultCode int    `json:"code"`
 	Message    string `json:"message"`
 }
+
+func NewScanResult(url url.URL, id string, code int, msg string) ScanResult {
+	result := ScanResult{
+		Id:         id,
+		Url:        url.String(),
+		ResultCode: code,
+		Message:    msg,
+	}
+	return result
+}

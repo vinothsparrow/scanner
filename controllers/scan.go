@@ -42,3 +42,20 @@ func (u ScanController) GitScan(c *gin.Context) {
 	c.Abort()
 	return
 }
+
+func (u ScanController) Status(c *gin.Context) {
+	id := strings.TrimSpace(c.Param("id"))
+	_, err := uuid.Parse(id)
+	if err != nil {
+		c.JSON(500, gin.H{"message": "Not a valid scan ID"})
+		c.Abort()
+		return
+	}
+	req, err := helper.GetScanRequest(id)
+	if err != nil {
+		helper.AddError(c, helper.ErrInternalServer)
+		return
+	}
+	c.JSON(200, gin.H{"Id": req.Id, "Result": req.Result})
+	return
+}
