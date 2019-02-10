@@ -7,6 +7,7 @@ import (
 	"github.com/vinothsparrow/scanner/config"
 	"github.com/vinothsparrow/scanner/helper"
 	"github.com/vinothsparrow/scanner/server"
+	_ "github.com/vinothsparrow/scanner/tests"
 )
 
 // @title .git folder scanner API
