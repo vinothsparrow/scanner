@@ -1,0 +1,22 @@
+language: go
+
+go:
+  - 1.11.5
+  - master
+
+install: true
+
+matrix:
+  allow_failures:
+    - go: master
+  fast_finish: true
+
+notifications:
+  email: false
+
+before_script:
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+  - dep ensure
+
+script:
+  - go test -v ./...
