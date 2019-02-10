@@ -56,6 +56,6 @@ func (u ScanController) Status(c *gin.Context) {
 		helper.AddError(c, helper.ErrInternalServer)
 		return
 	}
-	c.JSON(200, gin.H{"Id": req.Id, "Result": req.Result})
+	c.JSON(200, gin.H{"Id": req.Id, "Status": req.Status, "Result": req.Result})
 	return
 }
