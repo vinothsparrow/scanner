@@ -1,0 +1,165 @@
+basePath: /
+definitions:
+  model.Error:
+    properties:
+      detail:
+        type: string
+      status:
+        type: integer
+      title:
+        type: string
+    type: object
+  model.ScanResult:
+    properties:
+      code:
+        type: integer
+      id:
+        type: string
+      message:
+        type: string
+      url:
+        type: string
+    type: object
+  model.ScanResultError:
+    properties:
+      message:
+        type: string
+    type: object
+  model.ScanResultResponse:
+    properties:
+      Id:
+        type: string
+      message:
+        type: string
+    type: object
+  model.ScanStatusResultResponse:
+    properties:
+      Id:
+        type: string
+      Result:
+        $ref: '#/definitions/model.ScanResult'
+        type: object
+      Status:
+        type: string
+    type: object
+info:
+  contact:
+    email: vinothsparrow@live.com
+    name: API Support
+    url: https://github.com/vinothsparrow/scanner
+  description: This is a scanner server to scan .git folder in the website.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: .git folder scanner API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: get service health
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Error'
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.Error'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Error'
+            type: object
+      summary: Service health
+  /v1/scan/git:
+    get:
+      consumes:
+      - application/json
+      description: submit url for scan
+      parameters:
+      - description: url to scan
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ScanResultResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Error'
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.Error'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ScanResultError'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: GitScan api
+  /v1/scan/status/{id}:
+    get:
+      consumes:
+      - application/json
+      description: get the status scan
+      parameters:
+      - description: scan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ScanStatusResultResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Error'
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.Error'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ScanResultError'
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Scan status api
+securityDefinitions:
+  ApiKeyAuth:
+    in: query
+    name: api_key
+    type: apiKey
+swagger: "2.0"

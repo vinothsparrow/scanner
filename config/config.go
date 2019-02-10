@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -24,6 +25,19 @@ func Init(env string) {
 	if err != nil {
 		log.Error("error on parsing configuration file")
 	}
+	config.SetDefault("http.server", getenv("SCANNER_SERVER", "0.0.0.0"))
+	config.SetDefault("http.port", getenv("SCANNER_PORT", "8000"))
+	config.SetDefault("auth.key", getenv("SCANNER_AUTH_KEY", ""))
+	key := config.GetString("auth.key")
+	if len(key) == 0 {
+		uuidObj, _ := uuid.NewRandom()
+		id := uuidObj.String()
+		config.SetDefault("auth.key", id)
+		log.Println("API Key is", id)
+	}
+	config.SetDefault("http.env", getenv("SCANNER_ENV", "release"))
+	workers, _ := strconv.Atoi(getenv("SCANNER_WORKER_COUNT", "2"))
+	config.SetDefault("worker.count", workers)
 }
 
 func relativePath(basedir string, path *string) {
@@ -34,13 +48,6 @@ func relativePath(basedir string, path *string) {
 }
 
 func GetConfig() *viper.Viper {
-
-	config.SetDefault("http.server", getenv("SCANNER_SERVER", "0.0.0.0"))
-	config.SetDefault("http.port", getenv("SCANNER_PORT", "8000"))
-	config.SetDefault("auth.key", getenv("SCANNER_AUTH_KEY", "0a1e703c-4ba3-4156-b011-6fc1b7db71f5"))
-	config.SetDefault("http.env", getenv("SCANNER_ENV", "release"))
-	workers, _ := strconv.Atoi(getenv("SCANNER_WORKER_COUNT", "2"))
-	config.SetDefault("worker.count", workers)
 	return config
 }
 

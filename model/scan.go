@@ -38,3 +38,18 @@ func NewScanResult(url url.URL, id string, code int, msg string) ScanResult {
 	}
 	return result
 }
+
+type ScanResultError struct {
+	Message string `json:"message"`
+}
+
+type ScanResultResponse struct {
+	Message string `json:"message"`
+	Id      string `json:"Id"`
+}
+
+type ScanStatusResultResponse struct {
+	Status string     `json:"Status"`
+	Id     string     `json:"Id"`
+	Result ScanResult `json:"Result"`
+}

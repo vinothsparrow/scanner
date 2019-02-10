@@ -14,6 +14,18 @@ import (
 
 type ScanController struct{}
 
+// GitScanController godoc
+// @Summary GitScan api
+// @Description submit url for scan
+// @Accept  json
+// @Produce  json
+// @Security ApiKeyAuth
+// @Param url query string true "url to scan"
+// @Success 200 {object} model.ScanResultResponse
+// @Failure 400 {object} model.Error
+// @Failure 404 {object} model.Error
+// @Failure 500 {object} model.ScanResultError
+// @Router /v1/scan/git [get]
 func (u ScanController) GitScan(c *gin.Context) {
 	urlParam := strings.TrimSpace(c.Query("url"))
 	if len(urlParam) != 0 {
@@ -49,6 +61,18 @@ func (u ScanController) GitScan(c *gin.Context) {
 	return
 }
 
+// ScanStatusController godoc
+// @Summary Scan status api
+// @Description get the status scan
+// @Security ApiKeyAuth
+// @Accept  json
+// @Produce  json
+// @Param id path string true "scan ID"
+// @Success 200 {object} model.ScanStatusResultResponse
+// @Failure 400 {object} model.Error
+// @Failure 404 {object} model.Error
+// @Failure 500 {object} model.ScanResultError
+// @Router /v1/scan/status/{id} [get]
 func (u ScanController) Status(c *gin.Context) {
 	id := strings.TrimSpace(c.Param("id"))
 	_, err := uuid.Parse(id)

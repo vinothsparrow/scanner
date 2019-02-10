@@ -1,6 +1,11 @@
 package server
 
+import "github.com/swaggo/gin-swagger"              // gin-swagger middleware
+import "github.com/swaggo/gin-swagger/swaggerFiles" // swagger embed files
+
 import (
+	_ "github.com/vinothsparrow/scanner/docs"
+
 	"github.com/gin-gonic/gin"
 	"github.com/vinothsparrow/scanner/config"
 	"github.com/vinothsparrow/scanner/controllers"
@@ -12,11 +17,11 @@ func NewRouter() *gin.Engine {
 	gin.SetMode(config.GetString("http.env"))
 	router := gin.New()
 	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
 
 	health := new(controllers.HealthController)
 
 	router.GET("/health", health.Status)
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.Use(middlewares.RecoveryMiddleware())
 	router.Use(middlewares.AuthMiddleware())
 	router.Use(middlewares.ErrorMiddleware())
@@ -33,6 +38,7 @@ func NewRouter() *gin.Engine {
 			scanGroup.GET("/status/:id", scan.Status)
 		}
 	}
+
 	return router
 
 }
